@@ -2,11 +2,14 @@
 import copy
 import time
 
+"""this is the implementation of Apriori Algorithm in python 3.6"""
+
 class Apriori:
-    #this is the implementation of Apriori Algorithm in python 3.6
+    
     
     transactions = {}
-    def __init__(self,s='C:\\Users\\USER\\Desktop\\Company Prep\\Data Mining\\Transactions1.txt',n=2):
+    #Here a default path is given, while running the program, add file path accordingly
+    def __init__(self,s='Transactions1.txt',n=2):
         self.min_support_count = n
         self.input_file_path = s
 
@@ -35,6 +38,7 @@ class Apriori:
         return rtn,cnt
 
     """A funtion to check whether two sets can be joined or not"""
+    
     def isFeasible(self,s1,s2,s,k,rtn):
         r = True
         s = copy.deepcopy(s1)
@@ -55,6 +59,7 @@ class Apriori:
         return r,s
 
     """A utility function to check whether support count is more than min_support_count"""
+    
     def checkSupportCount(self,rtn):
         s = set({})
         for a in self.transactions:
@@ -71,6 +76,7 @@ class Apriori:
                 
         
     """ A funtion to join two dicts"""
+    
     def join(self,c,k):
         itr = iter(c)
         rtn = {}
@@ -95,6 +101,9 @@ class Apriori:
                 break
         #print("rtn = ",rtn)
         return self.checkSupportCount(rtn)
+    
+    """The function for running the algorithm"""
+    
     def solve(self,Performance_analysis=True):
         start_time = time.time()
         c,cnt = self.read_from_file()
