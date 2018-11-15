@@ -13,7 +13,6 @@ int main()
     Node tree;
     DataSet D = read_file("Train.txt");
     tree.construct(D);
-    cout<<"completed :)"<<endl;
     tree.print(0);
     map<string,string> test;
     test["AGE"] = "senior";
@@ -23,3 +22,23 @@ int main()
     tree.classify(test);
     return 0;
 }
+
+/*
+Output:
+
+Tree Structure:
+
+node: AGE
+     node: STUDENT
+          leaf: no
+          leaf: yes
+     leaf: yes
+     node: CREDIT_RATING
+          leaf: yes
+          leaf: no
+          
+          
+// for the given test case:
+Predicted class = yes
+
+*/
