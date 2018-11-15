@@ -1,3 +1,13 @@
+
+/*
+The input data must have discerete values for all the attributes
+the format should be:
+Primary Key attr1 attr2 ... attrN classes
+This heading followed by actual data
+*/
+
+
+
 #ifndef __DECISIONTREEH
 #include <iostream>
 #include <fstream>
