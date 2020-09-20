@@ -1,5 +1,6 @@
 #include <iostream>
 #include <map>
+#include <algorithm>
 #include <vector>
 #include <sstream>
 #include <string>
@@ -97,7 +98,7 @@ void Insert(FPTree* &t,vector<int> v,int ind,bool cond=false,int frq=0,Header* h
 void init(Header* &h,int& n)
 {
     ifstream in;
-    in.open("Transactions1.txt");
+    in.open("Transactions.txt");
     string s="";
     int t;
     while(!in.eof())
@@ -156,7 +157,7 @@ FPTree* makeFPTree()
     tree->parent = NULL;
     tree->next = NULL;
     ifstream in;
-    in.open("Transactions1.txt");
+    in.open("Transactions.txt");
     string s="";
     int t;
     vector<int> v;
@@ -244,11 +245,9 @@ FPTree* makeConditionalFPTree(Header hd,Header* &dum,int& nn)
         k = q->frequency;
         while(p->itemNo!=-1)
         {
-       //     cout<<p->itemNo<<endl;
             m[p->itemNo]+=k;
             p = p->parent;
         }
-     //   cout<<"****\n";
         q = q->next;
     }
     Header *head = NULL;
@@ -260,6 +259,12 @@ FPTree* makeConditionalFPTree(Header hd,Header* &dum,int& nn)
             sz++;
         itr++;
     }
+    if(sz==0)
+    {
+        dum = NULL;
+        nn = 0;
+        return rtn;
+    }
     head = new Header[sz];
     nn = sz;
     itr = m.begin();
@@ -267,7 +272,6 @@ FPTree* makeConditionalFPTree(Header hd,Header* &dum,int& nn)
     {
         if(itr->second>=MIN_SUPPORT)
         {
-        //    cout<<"item = "<<itr->first<<":"<<itr->second<<endl;
             head[j].itemno = itr->first;
             head[j].freq = itr->second;
             head[j].point = NULL;
@@ -275,32 +279,26 @@ FPTree* makeConditionalFPTree(Header hd,Header* &dum,int& nn)
         }
         itr++;
     }
-    //cout<<"here too"<<endl;
+    sort(head,head+sz,comp);
     dum = head;
-    //cout<<"here too1"<<endl;
     q = hd.point;
     while(q!=NULL)
     {
-        //  cout<<"+";
         vector<int> st;
         k = q->frequency;
         p = q->parent;
         while(p->itemNo!=-1)
         {
-           // cout<<p->itemNo<<endl;
             if(m[p->itemNo]>=MIN_SUPPORT)
             {
-                //st.push_back(p->itemNo);
                 st.insert(st.begin(),p->itemNo);
             }
             p = p->parent;
         }
-        //reverse(st.begin(),st.end());
+        sort(st.begin(),st.end(),Comp1);
         Insert(rtn,st,0,true,k,head,sz);
-     //   cout<<"deb"<<endl;
         q = q->next;
     }
-    //cout<<"complete"<<endl;
     return rtn;
 }
 
@@ -309,77 +307,78 @@ ofstream out("OutOfFPTree.txt");
 
 void MineFPTree(FPTree* t,Header *h,int n,vector<int> pattern,int ff)
 {
-   // cout<<"*";
     if(noOfBranches(t)==1)
     {
         // generate all combinations
-        if((t->children).size()==0)
+        if(n==0)
         {
+            vector<int> v1;
+           // mn = INT_MAX;
+            for(int i=0; i<pattern.size(); i++)
+            {
+                	v1.push_back(pattern[i]);
+            }
+            sort(v1.begin(),v1.end());
+            for(int ll=0;ll<v1.size();ll++)
+                out<<v1[ll]<<" ";
+            if(pattern.size()>0)
+            {
+                out<<" = "<<ff<<endl;
+            }
             return;
         }
 
         vector<int> v = TreeToArray(t),v1;
-      //  for(int i=0; i<v.size(); i++)
-        //    cout<<v[i]<<" ";
-        //cout<<endl;
-        int nn = v.size();
+        int nn = v.size(),mn = INT_MAX;
         int mask = (1<<nn)-1;
-        for(int i=0; i<=mask; i++)
+        for(int i=((pattern.size()==1)?0:1); i<=mask; i++)
         {
-            //	v1.clear();
+            	v1.clear();mn = INT_MAX;
             for(int j=0; j<nn; j++)
             {
                 if(i&(1<<j))
                 {
-                    //	v1.push_back(v[j]);
-                    out<<v[j]<<" ";
+                    	v1.push_back(v[j]);
+                    	if(mn>m[v[j]])
+                            mn = m[v[j]];
                 }
             }
             for(int i=0; i<pattern.size(); i++)
             {
-                //	v1.push_back(pattern[i]);
-                out<<pattern[i]<<" ";
+                	v1.push_back(pattern[i]);
             }
-            //	final.insert(v1);
-            out<<" = "<<ff<<endl;
+            mn = min(ff,mn);
+            sort(v1.begin(),v1.end());
+            for(int ll = 0;ll<v1.size();ll++)
+                out<<v1[ll]<<" ";
+            out<<" = "<<mn<<endl;
         }
     }
     else
     {
-        int mn;
+        int mn = INT_MAX;
+        vector<int> v1;
         for(int i=n-1; i>=0; i--)
         {
-       //     cout<<h[i].itemno<<"+++++"<<endl;
             Header *conHead = NULL;
             int conN;
             FPTree *cont = NULL;
             cont = makeConditionalFPTree(h[i],conHead,conN);
-         //   print(cont,0);
-           // cout<<"here"<<endl;
             pattern.insert(pattern.begin(),h[i].itemno);
             MineFPTree(cont,conHead,conN,pattern,h[i].freq);
             pattern.erase(pattern.begin());
             delete[] conHead;
             conHead = NULL;
         }
-          for(int i=0; i<pattern.size(); i++)
-            {
-                //	v1.push_back(pattern[i]);
-                out<<pattern[i]<<" ";
-            }
-            if(pattern.size()>0)
-            {
-                out<<" = "<<ff<<endl;
-            }
+    FPTree* rtn = NULL;
+    rtn = new FPTree;
+    rtn->itemNo = -1;
+    rtn->parent = NULL;
+    rtn->next = NULL;
+    rtn->frequency = 0;
+    MineFPTree(rtn,NULL,0,pattern,ff);
     }
 }
-
-
-
-
-
-
-
 
 int main()
 {
@@ -391,7 +390,7 @@ int main()
     }
     FPTree* t;
     t = makeFPTree();
-    //print(t,0);
+    print(t,0);
     vector<int> pattern;
     MineFPTree(t,hh,num,pattern,num);
     out.close();
